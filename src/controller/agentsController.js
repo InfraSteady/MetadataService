@@ -23,12 +23,10 @@ const createAgents = async (req, res) => {
     try {
         const connection = await getConnection();
         const reqBody = req.body;
-        const created_at = Math.floor(Date.now() / 1000);
         const [result] = await connection.query(insertIntoAgentsTable, [
             reqBody.agent_name,
             reqBody.agent_description,
             reqBody.agent_url,
-            created_at,
             req.user_id,
         ]);
         const agent_id = result.insertId;
@@ -47,7 +45,7 @@ const createAgents = async (req, res) => {
 const editAgent = async (req, res) => {
     try {
         const connection = await getConnection();
-        const { agent_name, agent_description, agent_url } = req.body;
+        const { agent_id, agent_name, agent_description, agent_url } = req.body;
 
         const updateQuery =
             "UPDATE `agents` SET " +
@@ -55,7 +53,7 @@ const editAgent = async (req, res) => {
             (agent_description ? "agent_description = ?, " : "") +
             (agent_url ? "agent_url = ? " : "") +
             "WHERE `id` = ?";
-        const values = [agent_name, agent_description, agent_url].filter((value) => value !== undefined); // Filter out undefined values
+        const values = [agent_name, agent_description, agent_url, agent_id].filter((value) => value !== undefined); // Filter out undefined values
         await connection.execute(updateQuery, values);
         res.status(200).json({
             message: "Agent Updated successfully",
@@ -67,8 +65,8 @@ const editAgent = async (req, res) => {
         });
     }
 };
-
-const DeleteAgents = async (req, res) => {
+// before deleteing a agent we should check wheather agents is associated with a test that is enabled and has only one agent, i.e. the current agent
+const deleteAgents = async (req, res) => {
     try {
         const connection = await getConnection();
         const reqBody = req.body;
@@ -85,4 +83,4 @@ const DeleteAgents = async (req, res) => {
     }
 };
 
-module.exports = { getAgents, createAgents, editAgent, DeleteAgents };
+module.exports = { getAgents, createAgents, editAgent, deleteAgents };

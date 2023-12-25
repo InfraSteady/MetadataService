@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const userAuthRouter = require("./router/UserAuthRouter.js");
+const userAuthRouter = require("./router/userAuthRouter.js");
 const projectRouter = require("./router/projectsRouter.js");
 const serviceTestsRouter = require("./router/serviceTestsRouter.js");
 const agentsRouter = require("./router/agentsRouter.js");

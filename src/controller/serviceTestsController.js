@@ -7,13 +7,13 @@ const {
     selectIDProjectServiceTestMapTable,
     deleteFromProjectServiceTestMapTable,
     deleteFromgentProjectServiceTestMapTable,
-    getSrviceTestsByUserId,
+    getServiceTestsByUserId,
 } = require("../db/sql.js");
 
 const getSeviceTests = async (req, res) => {
     try {
         const connection = await getConnection();
-        const [rows] = await connection.query(getSrviceTestsByUserId, [req.user_id]);
+        const [rows] = await connection.query(getServiceTestsByUserId, [req.user_id, req.query.project_id]); // project -id
         res.status(200).json(rows);
     } catch (error) {
         console.error("Error while getting data:", error);
@@ -38,8 +38,7 @@ const createSeviceTests = async (req, res) => {
             reqBody.interval,
             reqBody.degrade_response_time,
             reqBody.failed_response_time,
-            timestamp,
-            timestamp,
+            timestamp + reqBody.interval,
             timestamp,
         ]);
 
@@ -54,7 +53,7 @@ const createSeviceTests = async (req, res) => {
             project_service_test_map_id,
         ]);
         res.status(201).json({
-            message: "Sevice Tests Created SSuccessfully",
+            message: "Sevice Tests Created Successfully",
             service_test_id,
             project_service_test_map_id,
         });
@@ -70,6 +69,7 @@ const editSeviceTestsNameOrDescription = async (req, res) => {
     try {
         const connection = await getConnection();
         const {
+            service_test_id,
             service_test_name,
             service_test_endpoint,
             service_test_request_type,
@@ -79,6 +79,8 @@ const editSeviceTestsNameOrDescription = async (req, res) => {
             interval,
             degrade_response_time,
             failed_response_time,
+            test_status,
+            test_muted,
         } = req.body;
 
         const updateQuery =
@@ -92,6 +94,8 @@ const editSeviceTestsNameOrDescription = async (req, res) => {
             (interval ? "interval = ? " : "") +
             (degrade_response_time ? "degrade_response_time = ? " : "") +
             (failed_response_time ? "failed_response_time = ? " : "") +
+            (test_status ? "test_status = ? " : "") +
+            (test_muted ? "test_muted = ? " : "") +
             "WHERE `id` = ?";
         const values = [
             service_test_name,
@@ -103,6 +107,9 @@ const editSeviceTestsNameOrDescription = async (req, res) => {
             interval,
             degrade_response_time,
             failed_response_time,
+            test_status,
+            test_muted,
+            service_test_id,
         ].filter((value) => value !== undefined); // Filter out undefined values
         const [result] = await connection.execute(updateQuery, values);
         console.log("Updated rows:", result.affectedRows);

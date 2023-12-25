@@ -7,21 +7,21 @@ const { insertIntoUser, findUserByEmail } = require("../db/sql.js");
 const signUpController = async (req, res) => {
     try {
         const email = req.body.email;
-        const fname = req.body.fname;
-        const lname = req.body.lname;
-        let password = req.body.password;
-        if (!email || !password || !fname || !lname) {
-            return res.status(401).send();
+        const password = req.body.password;
+        if (!email || !password) {
+            return res.status(400).send("Email or password is Empty");
         }
         const hash = await bcrypt.hash(password, 8);
         const connection = await getConnection();
-        const addUser = await connection.query(insertIntoUser, [email, fname, lname, hash]);
+        const addUser = await connection.query(insertIntoUser, [email, hash]);
         const jsontoken = jwt.sign({ user_id: addUser.insertId }, process.env.SECRET_KEY);
 
         res.status(201).json({ token: jsontoken });
     } catch (e) {
         console.log(e);
-        res.status(401).send();
+        res.status(500).json({
+            error: "Internal server error. Please try again later.",
+        });
     }
 };
 
@@ -32,19 +32,19 @@ const loginController = async (req, res) => {
         const connection = await getConnection();
         const user = await connection.query(findUserByEmail, [email]);
 
-        if (!user) {
-            throw new Error("Unable to Login!");
+        if (!user || !password) {
+            return res.status(400).send("Email or password is Empty");
         }
         const isMatch = await bcryptjs.compare(password, user.password);
         if (!isMatch) {
-            throw new Error("Unable to Login!");
+            return res.status(403).send("You have Entered Invalid Password");
         }
         const jsontoken = jwt.sign({ user_id: user.id }, process.env.SECRET_KEY);
         res.status(200).json({ token: jsontoken }); //return res.redirect('/mainpage') ;
     } catch (e) {
         console.log(e);
-        return res.status(401).send({
-            message: "Invalid email or password",
+        return res.status(500).json({
+            error: "Internal server error. Please try again later.",
         });
     }
 };

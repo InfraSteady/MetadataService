@@ -1,12 +1,11 @@
 const { getConnection } = require("../db/connection.js");
 const {
     insertIntoProjectsTable,
-    insertIntoUserProjectMapTable,
-    updateProjectName,
-    updateProjectDescription,
     deleteFromProjectTable,
-    deleteFromUserProjectMapTable,
     getProjectByUserId,
+    selectIDProjectServiceTestMapTableByProjectId,
+    deleteFromProjectServiceTestMapTableByProjectId,
+    deleteFromgentProjectServiceTestMapTable,
 } = require("../db/sql.js");
 
 const getProject = async (req, res) => {
@@ -26,15 +25,12 @@ const createProject = async (req, res) => {
     try {
         const connection = await getConnection();
         const reqBody = req.body;
-        const created_at = Math.floor(Date.now() / 1000);
         const [result] = await connection.query(insertIntoProjectsTable, [
             reqBody.project_name,
             reqBody.project_description,
-            created_at,
-            created_at,
+            req.user_id,
         ]);
         const project_id = result.insertId;
-        await connection.query(insertIntoUserProjectMapTable, [req.user_id, project_id]);
         res.status(201).json({
             message: "Project Created successfully",
             project_id,
@@ -50,13 +46,14 @@ const createProject = async (req, res) => {
 const editProjectNameOrDescription = async (req, res) => {
     try {
         const connection = await getConnection();
-        const reqBody = req.body;
-        if (reqBody.project_name) {
-            await connection.query(updateProjectName, [reqBody.project_name, reqBody.project_id]);
-        }
-        if (reqBody.project_description) {
-            await connection.query(updateProjectDescription, [reqBody.project_description, reqBody.project_id]);
-        }
+        const { project_id, project_name, project_description } = req.body;
+        const updateQuery =
+            "UPDATE `projects` SET " +
+            (project_name ? "project_name = ?, " : "") +
+            (project_description ? "project_description = ?, " : "") +
+            "WHERE `id` = ?";
+        const values = [project_name, project_description, project_id].filter((value) => value !== undefined); // Filter out undefined values
+        await connection.execute(updateQuery, values);
         res.status(200).json({
             message: "Project Updated successfully",
         });
@@ -73,7 +70,11 @@ const DeleteProject = async (req, res) => {
         const connection = await getConnection();
         const reqBody = req.body;
         await connection.query(deleteFromProjectTable, [reqBody.project_id]);
-        await connection.query(deleteFromUserProjectMapTable, [req.user_id, project_id]);
+        const [rows] = await connection.query(selectIDProjectServiceTestMapTableByProjectId, [reqBody.project_id]);
+        await connection.query(deleteFromProjectServiceTestMapTableByProjectId, [reqBody.service_test_id]);
+
+        const project_service_test_map_id = rows.map((obj) => obj.id);
+        await connection.query(deleteFromgentProjectServiceTestMapTable, [project_service_test_map_id]);
         res.status(200).json({
             message: "Project Deleted successfully",
         });
