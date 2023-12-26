@@ -1,4 +1,4 @@
-const insertIntoUser = "INSERT INTO users(`email`, `fname`, `lname`, `password_hash`) VALUES (?,?,?,?)";
+const insertIntoUser = "INSERT INTO users(`email`, `password_hash`) VALUES (?,?)";
 const findUserById = "select * FROM `users` WHERE `id` = ?";
 const findUserByEmail = "select * FROM `users` WHERE `email` = ?";
 

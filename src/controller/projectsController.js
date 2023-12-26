@@ -50,8 +50,8 @@ const editProjectNameOrDescription = async (req, res) => {
         const updateQuery =
             "UPDATE `projects` SET " +
             (project_name ? "project_name = ?, " : "") +
-            (project_description ? "project_description = ?, " : "") +
-            "WHERE `id` = ?";
+            (project_description ? "project_description = ?, " : "").replace(/, $/, "") +
+            " WHERE `id` = ?";
         const values = [project_name, project_description, project_id].filter((value) => value !== undefined); // Filter out undefined values
         await connection.execute(updateQuery, values);
         res.status(200).json({

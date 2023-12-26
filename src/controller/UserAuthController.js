@@ -14,7 +14,7 @@ const signUpController = async (req, res) => {
         const hash = await bcrypt.hash(password, 8);
         const connection = await getConnection();
         const addUser = await connection.query(insertIntoUser, [email, hash]);
-        const jsontoken = jwt.sign({ user_id: addUser.insertId }, process.env.SECRET_KEY);
+        const jsontoken = jwt.sign({ user_id: addUser[0].insertId }, process.env.JWT_SECRET_KEY);
 
         res.status(201).json({ token: jsontoken });
     } catch (e) {
@@ -29,17 +29,19 @@ const loginController = async (req, res) => {
     try {
         const email = req.body.email;
         const password = req.body.password;
-        const connection = await getConnection();
-        const user = await connection.query(findUserByEmail, [email]);
-
-        if (!user || !password) {
+        if (!email || !password) {
             return res.status(400).send("Email or password is Empty");
         }
-        const isMatch = await bcryptjs.compare(password, user.password);
+        const connection = await getConnection();
+        const user = await connection.query(findUserByEmail, [email]);
+        if (!user[0][0]) {
+            return res.status(403).send("Email doesn't exist");
+        }
+        const isMatch = await bcrypt.compare(password, user[0][0].password_hash);
         if (!isMatch) {
             return res.status(403).send("You have Entered Invalid Password");
         }
-        const jsontoken = jwt.sign({ user_id: user.id }, process.env.SECRET_KEY);
+        const jsontoken = jwt.sign({ user_id: user[0][0].id }, process.env.JWT_SECRET_KEY);
         res.status(200).json({ token: jsontoken }); //return res.redirect('/mainpage') ;
     } catch (e) {
         console.log(e);

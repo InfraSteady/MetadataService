@@ -4,7 +4,7 @@ const {
     createSeviceTests,
     editSeviceTestsNameOrDescription,
     DeleteSeviceTests,
-} = require("../controller/projectsController.js");
+} = require("../controller/serviceTestsController.js");
 const auth = require("../middleware/auth.js");
 const router = new express.Router();
 
