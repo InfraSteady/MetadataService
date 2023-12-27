@@ -51,8 +51,8 @@ const editAgent = async (req, res) => {
             "UPDATE `agents` SET " +
             (agent_name ? "agent_name = ?, " : "") +
             (agent_description ? "agent_description = ?, " : "") +
-            (agent_url ? "agent_url = ? " : "") +
-            "WHERE `id` = ?";
+            (agent_url ? "agent_url = ?, " : "").replace(/, $/, "") +
+            " WHERE `id` = ?";
         const values = [agent_name, agent_description, agent_url, agent_id].filter((value) => value !== undefined); // Filter out undefined values
         await connection.execute(updateQuery, values);
         res.status(200).json({

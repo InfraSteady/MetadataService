@@ -84,19 +84,20 @@ const editSeviceTestsNameOrDescription = async (req, res) => {
         } = req.body;
 
         const updateQuery =
-            "UPDATE service_test_runner_data SET " +
-            (service_test_name ? "service_test_name = ?, " : "") +
-            (service_test_endpoint ? "service_test_endpoint = ?, " : "") +
-            (service_test_request_type ? "service_test_request_type = ? " : "") +
-            (service_test_request_header ? "service_test_request_header = ? " : "") +
-            (service_test_request_body ? "service_test_request_body = ? " : "") +
-            (service_test_request_query_param ? "service_test_request_query_param = ? " : "") +
-            (interval ? "interval = ? " : "") +
-            (degrade_response_time ? "degrade_response_time = ? " : "") +
-            (failed_response_time ? "failed_response_time = ? " : "") +
-            (test_status ? "test_status = ? " : "") +
-            (test_muted ? "test_muted = ? " : "") +
-            "WHERE `id` = ?";
+            (
+                "UPDATE `service_test_runner_data` SET " +
+                (service_test_name ? "service_test_name = ?, " : "") +
+                (service_test_endpoint ? "service_test_endpoint = ?, " : "") +
+                (service_test_request_type ? "service_test_request_type = ?, " : "") +
+                (service_test_request_header ? "service_test_request_header = ?, " : "") +
+                (service_test_request_body ? "service_test_request_body = ?, " : "") +
+                (service_test_request_query_param ? "service_test_request_query_param = ?, " : "") +
+                (interval ? "`interval` = ?, " : "") +
+                (degrade_response_time ? "degrade_response_time = ?, " : "") +
+                (failed_response_time ? "failed_response_time = ?, " : "") +
+                (test_status ? "test_status = ?, " : "") +
+                (test_muted ? "test_muted = ?, " : "")
+            ).replace(/, $/, "") + " WHERE `id` = ?";
         const values = [
             service_test_name,
             service_test_endpoint,
@@ -128,6 +129,7 @@ const DeleteSeviceTests = async (req, res) => {
     try {
         const connection = await getConnection();
         const reqBody = req.body;
+        console.log(reqBody.service_test_id);
         await connection.query(deleteFromServiceTestRunnerDataTable, [reqBody.service_test_id]);
         const [rows] = await connection.query(selectIDProjectServiceTestMapTable, [reqBody.service_test_id]);
         await connection.query(deleteFromProjectServiceTestMapTable, [reqBody.service_test_id]);
